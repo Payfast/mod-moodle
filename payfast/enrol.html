@@ -1,0 +1,23 @@
+
+<div align="center">
+
+<p><?php print_string("paymentrequired") ?></p>
+<p><b><?php echo $instancename; ?></b></p>
+<p><b><?php echo get_string("cost").": {$instance->currency} {$localisedcost}"; ?></b></p>
+<p><img alt="<?php print_string('payfastaccepted', 'enrol_payfast') ?>" src="https://www.payfast.co.za/images/logo/PayFast_Logo_75.png" /></p>
+<p><?php print_string("paymentinstant") ?></p>
+<?php
+
+?>
+<form action="<?php echo $payfasturl ?>" method="post">
+<?php
+    foreach( $formArray as $k=>$v )
+    {
+   ?> <input type="hidden" name="<?php p($k) ?>" value="<?php p($v) ?>" />    <?php
+    }
+    ?>
+<input type="submit" value="<?php print_string("sendpaymentbutton", "enrol_payfast") ?>" />
+
+</form>
+
+</div>
