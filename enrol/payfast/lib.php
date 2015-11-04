@@ -259,6 +259,7 @@ class enrol_payfast_plugin extends enrol_plugin {
 
                 $securityHash = md5( $secureString );
                 $formArray['signature'] = $securityHash;
+                $formArray['user_agent'] = 'Moodle 2.9';
 
                 include( $CFG->dirroot.'/enrol/payfast/enrol.html' );
             }
