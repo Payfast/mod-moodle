@@ -14,7 +14,7 @@
 define( 'PF_SOFTWARE_NAME', 'Moodle' );
 define( 'PF_SOFTWARE_VER', "2015011300" );
 define( 'PF_MODULE_NAME', 'PayFast-Moodle' );
-define( 'PF_MODULE_VER', '2015011300' );
+define( 'PF_MODULE_VER', '2019021900' );
 
 // Features
 // - PHP
