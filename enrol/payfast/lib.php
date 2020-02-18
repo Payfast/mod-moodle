@@ -194,19 +194,20 @@ class enrol_payfast_plugin extends enrol_plugin {
                 $userlastname    = $USER->lastname;
                 $instancename    = $this->get_instance_name($instance);
 
-                if ( $this->get_config( 'payfast_mode' ) == 'live' )
+                if ($this->get_config('payfast_mode') == 'test' && empty($this->get_config('merchant_id')) || empty($this->get_config('merchant_key')))
                 {
-                    $payfasturl = 'https://www.payfast.co.za/eng/process';
-                    $merchant_id = $this->get_config( 'merchant_id' );
-                    $merchant_key = $this->get_config( 'merchant_key' );
+                    $payfasturl   = 'https://sandbox.payfast.co.za/eng/process';
+                    $merchant_id  = '10004002';
+                    $merchant_key = 'q1cd2rdny4a53';
+                    $passphrase   = 'payfast';
                 }
                 else
                 {
-                    $payfasturl = 'https://sandbox.payfast.co.za/eng/process';
-                    $merchant_id = '10000100';
-                    $merchant_key = '46f0cd694581a';
+                    $this->get_config('payfast_mode') == 'live' ? $payfasturl = 'https://www.payfast.co.za/eng/process' : $payfasturl = 'https://sandbox.payfast.co.za/eng/process';
+                    $merchant_id  = $this->get_config('merchant_id');
+                    $merchant_key = $this->get_config('merchant_key');
+                    $passphrase   = $this->get_config('merchant_passphrase');
                 }
-
 
                 $formArray = array(
                     'merchant_id' => $merchant_id ,
@@ -228,8 +229,8 @@ class enrol_payfast_plugin extends enrol_plugin {
                 {
                     $secureString .= $k.'='.urlencode(trim($v)).'&';
                 }
-                $passphrase = $this->get_config('merchant_passphrase');
-                if( !empty( $passphrase ) && $this->get_config('payfast_mode') == 'live' )
+
+                if(!empty($passphrase))
                 {
                     $secureString = $secureString.'passphrase=' . urlencode( $passphrase  );
                 }
