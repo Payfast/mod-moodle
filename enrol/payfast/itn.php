@@ -129,7 +129,8 @@ if( !$pfError && !$pfDone )
 {
     pflog( 'Verify security signature' );
     $passphrase = $plugin->get_config( 'merchant_passphrase' );
-    $pfPassphrase = $plugin->get_config( 'payfast_mode' ) == 'test' ? null : ( !empty( $passphrase ) ? $passphrase : null );
+    $pfPassphrase = ( $plugin->get_config( 'payfast_mode' ) == 'test' && 
+    ( empty( $plugin->get_config( 'merchant_id' ) ) || empty( $plugin->get_config( 'merchant_key' ) ) ) ) ? 'payfast' : ( !empty( $passphrase ) ? $passphrase : null );
     // If signature different, log for debugging
     if( !pfValidSignature( $pfData, $pfParamString, $pfPassphrase ) )
     {
