@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,41 +16,53 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Listens for Instant Payment Notification from PayFast
+ * Listens for Instant Payment Notification from Payfast
  *
- * This script waits for Payment notification from PayFast,
- * then double checks that data by sending it back to PayFast.
- * If PayFast verifies this then it sets up the enrolment for that
+ * This script waits for Payment notification from Payfast,
+ * then double checks that data by sending it back to Payfast.
+ * If Payfast verifies this then it sets up the enrolment for that
  * user.
  *
  * @package    enrol_payfast
- * Copyright (c) 2008 PayFast (Pty) Ltd
- * You (being anyone who is not PayFast (Pty) Ltd) may download and use this plugin / code in your own website in conjunction with a registered and active PayFast account. If your PayFast account is terminated for any reason, you may not use this plugin / code or part thereof.
- * Except as expressly indicated in this licence, you may not use, copy, modify or distribute this plugin / code or part thereof in any way.
+/**
+ * Copyright (c) 2023 Payfast (Pty) Ltd
+ * You (being anyone who is not Payfast (Pty) Ltd) may download and use this plugin / code
+ * in your own website in conjunction with a registered and active Payfast account.
+ * If your Payfast account is terminated for any reason, you may not use this plugin / code or part thereof.
+ * Except as expressly indicated in this licence, you may not use, copy, modify or distribute this plugin /
+ * code or part thereof in any way.
  */
 
 // Disable moodle specific debug messages and any errors in output,
 // comment out when debugging or better look into error log!
 define('NO_DEBUG_DISPLAY', true);
 
-require("../../config.php");
+//// Create user agent string
+// User agent constituents (for cURL)
+define( 'PF_SOFTWARE_NAME', 'Moodle' );
+define( 'PF_SOFTWARE_VER', "2021051700" );
+define( 'PF_MODULE_NAME', 'PayFast-Moodle' );
+define( 'PF_MODULE_VER', '2023052600' );
+
+require_once("../../config.php");
 require_once("lib.php");
 require_once($CFG->libdir.'/enrollib.php');
 require_once($CFG->libdir . '/filelib.php');
-require_once( "payfast_common.inc" );
+require_once("vendor/autoload.php");
 
-// PayFast does not like when we return error messages here,
+use Payfast\PayfastCommon\PayfastCommon;
+
+// Payfast does not like when we return error messages here,
 // the custom handler just logs exceptions and stops.
 set_exception_handler('enrol_payfast_itn_exception_handler');
 
 /// Keep out casual intruders
-if ( empty( $_POST ) or !empty( $_GET ) )
-{
+if (empty($_POST) || !empty($_GET)) {
     print_error("Sorry, you can not use the script that way.");
 }
 $tld = 'co.za';
 $plugin = enrol_get_plugin('payfast');
-define( 'PF_DEBUG', $plugin->get_config( 'payfast_debug' ) );
+define('PF_DEBUG', $plugin->get_config('payfast_debug'));
 
 $pfError = false;
 $pfErrMsg = '';
@@ -57,15 +70,14 @@ $pfDone = false;
 $pfData = array();
 $pfParamString = '';
 
-pflog( 'PayFast ITN call received' );
+PayfastCommon::pflog('Payfast ITN call received');
 $data = new stdClass();
 
-foreach ( $_POST as $key => $value)
-{
+foreach ($_POST as $key => $value) {
     $data->$key = $value;
 }
 
-$custom = explode( '-', $data->m_payment_id );
+$custom = explode('-', $data->m_payment_id);
 $data->userid           = (int)$custom[0];
 $data->courseid         = (int)$custom[1];
 $data->instanceid       = (int)$custom[2];
@@ -74,140 +86,112 @@ $data->timeupdated      = time();
 
 /// get the user and course records
 
-if (! $user = $DB->get_record( "user", array( "id" => $data->userid ) ) )
-{
+if (! $user = $DB->get_record("user", array("id" => $data->userid))) {
     $pfError = true;
     $pfErrMsg .= "Not a valid user id \n";
 }
 
-if (! $course = $DB->get_record( "course", array( "id" => $data->courseid ) ) )
-{
+if (! $course = $DB->get_record("course", array("id" => $data->courseid))) {
     $pfError = true;
     $pfErrMsg .= "Not a valid course id \n";
 }
 
-if (! $context = context_course::instance( $course->id, IGNORE_MISSING ) )
-{
+if (! $context = context_course::instance($course->id, IGNORE_MISSING)) {
     $pfError = true;
     $pfErrMsg .= "Not a valid context id \n";
 }
 
-if (! $plugin_instance = $DB->get_record( "enrol", array( "id" => $data->instanceid, "status"=>0 ) ) )
-{
+if (! $plugin_instance = $DB->get_record("enrol", array("id" => $data->instanceid, "status"=>0))) {
     $pfError = true;
     $pfErrMsg .= "Not a valid instance id \n";
 }
 
 
-//// Notify PayFast that information has been received
-if( !$pfError && !$pfDone )
-{
-    header( 'HTTP/1.0 200 OK' );
+//// Notify Payfast that information has been received
+if (!$pfError && !$pfDone) {
+    header('HTTP/1.0 200 OK');
     flush();
 }
 
-//// Get data sent by PayFast
-if( !$pfError && !$pfDone )
-{
-    pflog( 'Get posted data' );
+//// Get data sent by Payfast
+if (!$pfError && !$pfDone) {
+    PayfastCommon::pflog('Get posted data');
 
     // Posted variables from ITN
-    $pfData = pfGetData();
-    $pfData['item_name'] = html_entity_decode( $pfData['item_name'] );
-    $pfData['item_description'] = html_entity_decode( $pfData['item_description'] );
-    pflog( 'PayFast Data: '. print_r( $pfData, true ) );
+    $pfData = PayfastCommon::pfGetData();
+    $pfData['item_name'] = html_entity_decode($pfData['item_name']);
+    $pfData['item_description'] = html_entity_decode($pfData['item_description']);
+    PayfastCommon::pflog('Payfast Data: '. print_r($pfData, true));
 
-    if( $pfData === false )
-    {
+    if ($pfData === false) {
         $pfError = true;
-        $pfErrMsg = PF_ERR_BAD_ACCESS;
+        $pfErrMsg = PayfastCommon::PF_ERR_BAD_ACCESS;
     }
 }
 
 //// Verify security signature
-if( !$pfError && !$pfDone )
-{
-    pflog( 'Verify security signature' );
-    $passphrase = $plugin->get_config( 'merchant_passphrase' );
-    $pfPassphrase = ( $plugin->get_config( 'payfast_mode' ) == 'test' && 
-    ( empty( $plugin->get_config( 'merchant_id' ) ) || empty( $plugin->get_config( 'merchant_key' ) ) ) ) ? 'payfast' : ( !empty( $passphrase ) ? $passphrase : null );
+if (!$pfError && !$pfDone) {
+    PayfastCommon::pflog('Verify security signature');
+    $pfPassphrase = !empty($plugin->get_config('merchant_passphrase'))
+        ? $plugin->get_config('merchant_passphrase') : null;
     // If signature different, log for debugging
-    if( !pfValidSignature( $pfData, $pfParamString, $pfPassphrase ) )
-    {
+    if (!PayfastCommon::pfValidSignature($pfData, $pfParamString, $pfPassphrase)) {
         $pfError = true;
-        $pfErrMsg = PF_ERR_INVALID_SIGNATURE;
+        $pfErrMsg = PayfastCommon::PF_ERR_INVALID_SIGNATURE;
     }
 }
-
-//// Verify source IP (If not in debug mode)
-if( !$pfError && !$pfDone && !PF_DEBUG )
-{
-    pflog( 'Verify source IP' );
-
-    if( !pfValidIP( $_SERVER['REMOTE_ADDR'] ) )
-    {
-        $pfError = true;
-        $pfErrMsg = PF_ERR_BAD_SOURCE_IP;
-    }
-}
-
 
 //// Verify data received
-if( !$pfError )
-{
-    pflog( 'Verify data received' );
+if (!$pfError) {
+    PayfastCommon::pflog('Verify data received');
 
-    $pfHost = ( $plugin->get_config( 'payfast_mode' ) == 'live' ? 'www' : 'sandbox'  ) . '.payfast.' . $tld;
-    $pfValid = pfValidData( $pfHost, $pfParamString );
+    $pfHost = ($plugin->get_config('payfast_mode') == 'live' ? 'www' : 'sandbox') . '.payfast.' . $tld;
+    $pfValid = PayfastCommon::pfValidData($pfHost, $pfParamString);
 
-    if( !$pfValid )
-    {
+    if (!$pfValid) {
         $pfError = true;
-        $pfErrMsg = PF_ERR_BAD_ACCESS;
+        $pfErrMsg = PayfastCommon::PF_ERR_BAD_ACCESS;
     }
 }
 
 //// Check data against internal order
-if( !$pfError && !$pfDone )
-{
-    pflog( 'Check data against internal order' );
+if (!$pfError && !$pfDone) {
+    PayfastCommon::pflog('Check data against internal order');
 
-    if ( (float) $plugin_instance->cost <= 0 ) {
+    if ((float) $plugin_instance->cost <= 0) {
         $cost = (float) $plugin->get_config('cost');
     } else {
         $cost = (float) $plugin_instance->cost;
     }
 
-    $cost = format_float( $cost, 2, false );
+    $cost = format_float($cost, 2, false);
     // Check order amount
-    if( !pfAmountsEqual( $pfData['amount_gross'], $cost ) )
-    {
+    if (!PayfastCommon::pfAmountsEqual($pfData['amount_gross'], $cost)) {
         $pfError = true;
-        $pfErrMsg = PF_ERR_AMOUNT_MISMATCH;
+        $pfErrMsg = PayfastCommon::PF_ERR_AMOUNT_MISMATCH;
     }
 }
 
-if( !$pfError && !$pfDone )
-{
-    if ( $existing = $DB->get_record( "enrol_payfast", array( "pf_payment_id" => $data->pf_payment_id ) ) )
-    {   // Make sure this transaction doesn't exist already
+if (!$pfError && !$pfDone) {
+    if ($existing = $DB->get_record(
+        "enrol_payfast",
+        array("pf_payment_id" => $data->pf_payment_id)
+    )
+    ) {   // Make sure this transaction doesn't exist already
         $pfErrMsg .= "Transaction $data->pf_payment_id is being repeated! \n" ;
         $pfError = true;
     }
-    if ( $data->payment_currency != $plugin_instance->currency )
-    {
+    if ($data->payment_currency != $plugin_instance->currency) {
         $pfErrMsg .= "Currency does not match course settings, received: " . $data->mc_currency . "\n";
         $pfError = true;
     }
 
-    if ( !$user = $DB->get_record( 'user', array( 'id' => $data->userid ) ) )
-    {   // Check that user exists
+    if (!$user = $DB->get_record('user', array('id' => $data->userid))) {   // Check that user exists
         $pfErrMsg .= "User $data->userid doesn't exist \n";
         $pfError = true;
     }
 
-    if ( !$course = $DB->get_record( 'course', array( 'id'=> $data->courseid ) ) )
-    { // Check that course exists
+    if (!$course = $DB->get_record('course', array('id'=> $data->courseid))) { // Check that course exists
         $pfErrMsg .= "Course $data->courseid doesn't exist \n";
         $pfError = true;
     }
@@ -215,16 +199,14 @@ if( !$pfError && !$pfDone )
 
 
 //// Check status and update order
-if( !$pfError && !$pfDone )
-{
-    pflog( 'Check status and update order' );
+if (!$pfError && !$pfDone) {
+    PayfastCommon::pflog('Check status and update order');
 
     $transaction_id = $pfData['pf_payment_id'];
 
-    switch( $pfData['payment_status'] )
-    {
+    switch ($pfData['payment_status']) {
         case 'COMPLETE':
-            pflog( '- Complete' );
+            PayfastCommon::pflog('- Complete');
 
             $coursecontext = context_course::instance($course->id, IGNORE_MISSING);
 
@@ -241,8 +223,18 @@ if( !$pfError && !$pfDone )
             $plugin->enrol_user($plugin_instance, $user->id, $plugin_instance->roleid, $timestart, $timeend);
 
             // Pass $view=true to filter hidden caps if the user cannot see them
-            if ($users = get_users_by_capability($context, 'moodle/course:update', 'u.*', 'u.id ASC',
-                '', '', '', '', false, true)) {
+            if ($users = get_users_by_capability(
+                $context,
+                'moodle/course:update',
+                'u.*',
+                'u.id ASC',
+                '',
+                '',
+                '',
+                '',
+                false,
+                true
+            )) {
                 $users = sort_by_roleassignment_authority($users, $context);
                 $teacher = array_shift($users);
             } else {
@@ -272,7 +264,6 @@ if( !$pfError && !$pfDone )
                 $eventdata->fullmessagehtml   = '';
                 $eventdata->smallmessage      = '';
                 message_send($eventdata);
-
             }
 
             if (!empty($mailteachers) && !empty($teacher)) {
@@ -293,8 +284,7 @@ if( !$pfError && !$pfDone )
                 message_send($eventdata);
             }
 
-            if ( !empty( $mailadmins ) )
-            {
+            if (!empty($mailadmins)) {
                 $a->course = format_string($course->fullname, true, array('context' => $coursecontext));
                 $a->user = fullname($user);
                 $admins = get_admins();
@@ -313,18 +303,18 @@ if( !$pfError && !$pfDone )
                     message_send($eventdata);
                 }
             }
-            $DB->insert_record("enrol_payfast", $data );
+            $DB->insert_record("enrol_payfast", $data);
 
 
             break;
 
         case 'FAILED':
-            pflog( '- Failed' );
+            PayfastCommon::pflog('- Failed');
 
             break;
 
         case 'PENDING':
-            pflog( '- Pending' );
+            PayfastCommon::pflog('- Pending');
 
             $eventdata = new stdClass();
             $eventdata->modulename        = 'moodle';
@@ -332,14 +322,14 @@ if( !$pfError && !$pfDone )
             $eventdata->name              = 'payfast_enrolment';
             $eventdata->userfrom          = get_admin();
             $eventdata->userto            = $user;
-            $eventdata->subject           = "Moodle: PayFast payment";
-            $eventdata->fullmessage       = "Your PayFast payment is pending.";
+            $eventdata->subject           = "Moodle: Payfast payment";
+            $eventdata->fullmessage       = "Your Payfast payment is pending.";
             $eventdata->fullmessageformat = FORMAT_PLAIN;
             $eventdata->fullmessagehtml   = '';
             $eventdata->smallmessage      = '';
             message_send($eventdata);
 
-            message_payfast_error_to_admin("Payment pending", $data );
+            message_payfast_error_to_admin("Payment pending", $data);
 
             break;
 
@@ -347,13 +337,10 @@ if( !$pfError && !$pfDone )
             // If unknown status, do nothing (safest course of action)
             break;
     }
-
-}
-else
-{
-    $DB->insert_record( "enrol_payfast", $data, false);
-    message_payfast_error_to_admin( "Received an invalid payment notification!! (Fake payment?)\n" . $pfErrMsg, $data);
-    die( 'ERROR encountered, view the logs to debug.' );
+} else {
+    $DB->insert_record("enrol_payfast", $data, false);
+    message_payfast_error_to_admin("Received an invalid payment notification!! (Fake payment?)\n" . $pfErrMsg, $data);
+    die('ERROR encountered, view the logs to debug.');
 }
 
 exit;
@@ -362,7 +349,8 @@ exit;
 //--- HELPER FUNCTIONS --------------------------------------------------------------------------------------
 
 
-function message_payfast_error_to_admin($subject, $data) {
+function message_payfast_error_to_admin($subject, $data)
+{
     echo $subject;
     $admin = get_admin();
     $site = get_site();
@@ -384,9 +372,8 @@ function message_payfast_error_to_admin($subject, $data) {
     $eventdata->fullmessageformat = FORMAT_PLAIN;
     $eventdata->fullmessagehtml   = '';
     $eventdata->smallmessage      = '';
-    pflog( 'Error To Admin: ' . print_r( $eventdata, true ) );
+    PayfastCommon::pflog('Error To Admin: ' . print_r($eventdata, true));
     message_send($eventdata);
-
 }
 
 /**
@@ -395,7 +382,8 @@ function message_payfast_error_to_admin($subject, $data) {
  * @param Exception $ex
  * @return void - does not return. Terminates execution!
  */
-function enrol_payfast_itn_exception_handler($ex) {
+function enrol_payfast_itn_exception_handler($ex)
+{
     $info = get_exception_info($ex);
 
     $logerrmsg = "enrol_payfast ITN exception handler: ".$info->message;

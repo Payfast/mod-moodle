@@ -1,11 +1,14 @@
 <?php
 /**
- * Copyright (c) 2008 PayFast (Pty) Ltd
- * You (being anyone who is not PayFast (Pty) Ltd) may download and use this plugin / code in your own website in conjunction with a registered and active PayFast account. If your PayFast account is terminated for any reason, you may not use this plugin / code or part thereof.
- * Except as expressly indicated in this licence, you may not use, copy, modify or distribute this plugin / code or part thereof in any way.
+ * Copyright (c) 2023 Payfast (Pty) Ltd
+ * You (being anyone who is not Payfast (Pty) Ltd) may download and use this plugin / code
+ * in your own website in conjunction with a registered and active Payfast account.
+ * If your Payfast account is terminated for any reason, you may not use this plugin / code or part thereof.
+ * Except as expressly indicated in this licence, you may not use, copy, modify or distribute this plugin /
+ * code or part thereof in any way.
  */
 
-require("../../config.php");
+require_once("../../config.php");
 require_once("$CFG->dirroot/enrol/payfast/lib.php");
 
 $id = required_param('id', PARAM_INT);
@@ -28,9 +31,8 @@ if (!empty($SESSION->wantsurl)) {
 
 $fullname = format_string($course->fullname, true, array('context' => $context));
 
-if (is_enrolled($context, NULL, '', true)) { // TODO: use real paypal check
+if (is_enrolled($context, null, '', true)) {
     redirect($destination, get_string('paymentthanks', '', $fullname));
-
 } else {   /// Somehow they aren't enrolled yet!  :-(
     $PAGE->set_url($destination);
     echo $OUTPUT->header();
@@ -39,5 +41,3 @@ if (is_enrolled($context, NULL, '', true)) { // TODO: use real paypal check
     $a->fullname = $fullname;
     notice(get_string('paymentsorry', '', $a), $destination);
 }
-
-

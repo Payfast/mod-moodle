@@ -1,11 +1,14 @@
 <?php
 /**
- * Copyright (c) 2008 PayFast (Pty) Ltd
- * You (being anyone who is not PayFast (Pty) Ltd) may download and use this plugin / code in your own website in conjunction with a registered and active PayFast account. If your PayFast account is terminated for any reason, you may not use this plugin / code or part thereof.
- * Except as expressly indicated in this licence, you may not use, copy, modify or distribute this plugin / code or part thereof in any way.
+ * Copyright (c) 2023 Payfast (Pty) Ltd
+ * You (being anyone who is not Payfast (Pty) Ltd) may download and use this plugin / code
+ * in your own website in conjunction with a registered and active Payfast account.
+ * If your Payfast account is terminated for any reason, you may not use this plugin / code or part thereof.
+ * Except as expressly indicated in this licence, you may not use, copy, modify or distribute this plugin /
+ * code or part thereof in any way.
  */
 
-require('../../config.php');
+require_once('../../config.php');
 require_once('edit_form.php');
 
 $courseid   = required_param('courseid', PARAM_INT);
@@ -28,7 +31,12 @@ if (!enrol_is_enabled('payfast')) {
 $plugin = enrol_get_plugin('payfast');
 
 if ($instanceid) {
-    $instance = $DB->get_record('enrol', array('courseid'=>$course->id, 'enrol'=>'payfast', 'id'=>$instanceid), '*', MUST_EXIST);
+    $instance = $DB->get_record(
+        'enrol',
+        array('courseid'=>$course->id, 'enrol'=>'payfast', 'id'=>$instanceid),
+        '*',
+        MUST_EXIST
+    );
     $instance->cost = format_float($instance->cost, 2, true);
 } else {
     require_capability('moodle/course:enrolconfig', $context);
@@ -39,12 +47,11 @@ if ($instanceid) {
     $instance->courseid = $course->id;
 }
 
-$mform = new enrol_payfast_edit_form(NULL, array($instance, $plugin, $context));
+$mForm = new enrol_payfast_edit_form(null, array($instance, $plugin, $context));
 
-if ($mform->is_cancelled()) {
+if ($mForm->is_cancelled()) {
     redirect($return);
-
-} else if ($data = $mform->get_data()) {
+} elseif ($data = $mForm->get_data()) {
     if ($instance->id) {
         $reset = ($instance->status != $data->status);
 
@@ -62,10 +69,17 @@ if ($mform->is_cancelled()) {
         if ($reset) {
             $context->mark_dirty();
         }
-
     } else {
-        $fields = array('status'=>$data->status, 'name'=>$data->name, 'cost'=>unformat_float($data->cost), 'currency'=>$data->currency, 'roleid'=>$data->roleid,
-                        'enrolperiod'=>$data->enrolperiod, 'enrolstartdate'=>$data->enrolstartdate, 'enrolenddate'=>$data->enrolenddate);
+        $fields = array(
+            'status'=>$data->status,
+            'name'=>$data->name,
+            'cost'=>unformat_float($data->cost),
+            'currency'=>$data->currency,
+            'roleid'=>$data->roleid,
+            'enrolperiod'=>$data->enrolperiod,
+            'enrolstartdate'=>$data->enrolstartdate,
+            'enrolenddate'=>$data->enrolenddate
+        );
         $plugin->add_instance($course, $fields);
     }
 
@@ -77,5 +91,5 @@ $PAGE->set_title(get_string('pluginname', 'enrol_payfast'));
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('pluginname', 'enrol_payfast'));
-$mform->display();
+$mForm->display();
 echo $OUTPUT->footer();

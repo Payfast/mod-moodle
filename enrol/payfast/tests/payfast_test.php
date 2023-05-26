@@ -1,37 +1,44 @@
 <?php
 /**
- * Copyright (c) 2008 PayFast (Pty) Ltd
- * You (being anyone who is not PayFast (Pty) Ltd) may download and use this plugin / code in your own website in conjunction with a registered and active PayFast account. If your PayFast account is terminated for any reason, you may not use this plugin / code or part thereof.
- * Except as expressly indicated in this licence, you may not use, copy, modify or distribute this plugin / code or part thereof in any way.
+ * Copyright (c) 2023 Payfast (Pty) Ltd
+ * You (being anyone who is not Payfast (Pty) Ltd) may download and use this plugin / code
+ * in your own website in conjunction with a registered and active Payfast account.
+ * If your Payfast account is terminated for any reason, you may not use this plugin / code or part thereof.
+ * Except as expressly indicated in this licence, you may not use, copy, modify or distribute this plugin /
+ * code or part thereof in any way.
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 
-class enrol_payfast_testcase extends advanced_testcase {
-
-    protected function enable_plugin() {
+class enrol_payfast_testcase extends advanced_testcase
+{
+    protected function enable_plugin()
+    {
         $enabled = enrol_get_plugins(true);
         $enabled['payfast'] = true;
         $enabled = array_keys($enabled);
         set_config('enrol_plugins_enabled', implode(',', $enabled));
     }
 
-    protected function disable_plugin() {
+    protected function disable_plugin()
+    {
         $enabled = enrol_get_plugins(true);
         unset($enabled['payfast']);
         $enabled = array_keys($enabled);
         set_config('enrol_plugins_enabled', implode(',', $enabled));
     }
 
-    public function test_basics() {
+    public function test_basics()
+    {
         $this->assertFalse(enrol_is_enabled('payfast'));
         $plugin = enrol_get_plugin('payfast');
         $this->assertInstanceOf('enrol_payfast_plugin', $plugin);
         $this->assertEquals(ENROL_EXT_REMOVED_SUSPENDNOROLES, get_config('enrol_payfast', 'expiredaction'));
     }
 
-    public function test_sync_nothing() {
+    public function test_sync_nothing()
+    {
         $this->resetAfterTest();
 
         $this->enable_plugin();
@@ -41,7 +48,8 @@ class enrol_payfast_testcase extends advanced_testcase {
         $payfastplugin->sync(new null_progress_trace());
     }
 
-    public function test_expired() {
+    public function test_expired()
+    {
         global $DB;
         $this->resetAfterTest();
 
@@ -127,10 +135,30 @@ class enrol_payfast_testcase extends advanced_testcase {
         $this->assertEquals(6, $DB->count_records('role_assignments'));
         $this->assertEquals(4, $DB->count_records('role_assignments', array('roleid'=>$studentrole->id)));
         $this->assertEquals(1, $DB->count_records('role_assignments', array('roleid'=>$teacherrole->id)));
-        $this->assertFalse($DB->record_exists('role_assignments', array('contextid'=>$context1->id, 'userid'=>$user3->id, 'roleid'=>$studentrole->id)));
-        $this->assertFalse($DB->record_exists('role_assignments', array('contextid'=>$context2->id, 'userid'=>$user2->id, 'roleid'=>$studentrole->id)));
-        $this->assertFalse($DB->record_exists('role_assignments', array('contextid'=>$context2->id, 'userid'=>$user1->id, 'roleid'=>$teacherrole->id)));
-        $this->assertTrue($DB->record_exists('role_assignments', array('contextid'=>$context2->id, 'userid'=>$user1->id, 'roleid'=>$studentrole->id)));
+        $this->assertFalse(
+            $DB->record_exists(
+            'role_assignments',
+            array('contextid'=>$context1->id, 'userid'=>$user3->id, 'roleid'=>$studentrole->id)
+        )
+        );
+        $this->assertFalse(
+            $DB->record_exists(
+            'role_assignments',
+            array('contextid'=>$context2->id, 'userid'=>$user2->id, 'roleid'=>$studentrole->id)
+        )
+        );
+        $this->assertFalse(
+            $DB->record_exists(
+            'role_assignments',
+            array('contextid'=>$context2->id, 'userid'=>$user1->id, 'roleid'=>$teacherrole->id)
+        )
+        );
+        $this->assertTrue(
+            $DB->record_exists(
+            'role_assignments',
+            array('contextid'=>$context2->id, 'userid'=>$user1->id, 'roleid'=>$studentrole->id)
+        )
+        );
 
 
         $payfastplugin->set_config('expiredaction', ENROL_EXT_REMOVED_UNENROL);
@@ -143,9 +171,24 @@ class enrol_payfast_testcase extends advanced_testcase {
         $this->assertEquals(2, $DB->count_records('role_assignments', array('roleid'=>$teacherrole->id)));
         $payfastplugin->sync($trace);
         $this->assertEquals(6, $DB->count_records('user_enrolments'));
-        $this->assertFalse($DB->record_exists('user_enrolments', array('enrolid'=>$instance1->id, 'userid'=>$user3->id)));
-        $this->assertFalse($DB->record_exists('user_enrolments', array('enrolid'=>$instance2->id, 'userid'=>$user2->id)));
-        $this->assertFalse($DB->record_exists('user_enrolments', array('enrolid'=>$instance3->id, 'userid'=>$user1->id)));
+        $this->assertFalse(
+            $DB->record_exists(
+            'user_enrolments',
+            array('enrolid'=>$instance1->id, 'userid'=>$user3->id)
+        )
+        );
+        $this->assertFalse(
+            $DB->record_exists(
+                'user_enrolments',
+                array('enrolid'=>$instance2->id, 'userid'=>$user2->id)
+            )
+        );
+        $this->assertFalse(
+            $DB->record_exists(
+                'user_enrolments',
+                array('enrolid'=>$instance3->id, 'userid'=>$user1->id)
+            )
+        );
         $this->assertEquals(5, $DB->count_records('role_assignments'));
         $this->assertEquals(4, $DB->count_records('role_assignments', array('roleid'=>$studentrole->id)));
         $this->assertEquals(1, $DB->count_records('role_assignments', array('roleid'=>$teacherrole->id)));

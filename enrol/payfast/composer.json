@@ -1,0 +1,14 @@
+{
+    "name": "payfast/moodle-payfast",
+    "type": "library",
+    "license": "GNU",
+    "autoload": {
+        "psr-4": {
+            "Payfast\\MoodlePayfast\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "payfast/payfast-common": "dev-main"
+    }
+}
