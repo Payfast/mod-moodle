@@ -1,0 +1,61 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "ed876e1a1128cbc5af3a656d8f1e44de",
+    "packages": [
+        {
+            "name": "payfast/payfast-common",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PayFast/payfast-common.git",
+                "reference": "b4488eb100d84d8998a74e5a8fe01bed652c8ff1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PayFast/payfast-common/zipball/b4488eb100d84d8998a74e5a8fe01bed652c8ff1",
+                "reference": "b4488eb100d84d8998a74e5a8fe01bed652c8ff1",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Payfast\\PayfastCommon\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0"
+            ],
+            "authors": [
+                {
+                    "name": "App Inlet (Pty) Ltd",
+                    "email": "info@appinlet.com"
+                }
+            ],
+            "description": "Payfast common class for modules.",
+            "homepage": "https://github.com/PayFast/payfast-common",
+            "support": {
+                "issues": "https://github.com/PayFast/payfast-common/issues",
+                "source": "https://github.com/PayFast/payfast-common/tree/main"
+            },
+            "time": "2023-02-01T12:15:31+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "dev",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
+}
