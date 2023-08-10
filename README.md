@@ -19,3 +19,4 @@ Save your changes and go 'Enable' the Payfast Enrolment plugin from the list of 
 
 In Administration>Course Administration>Users>Enrolment Methods go and add Payfast as an available enrolment method
 
+Please [click here](https://payfast.io/integration/shopping-carts/moodle/) for more information concerning this module.
